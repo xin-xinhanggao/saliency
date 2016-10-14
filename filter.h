@@ -97,4 +97,21 @@ static image<float> *laplacian(image<float> *src) {
   return dst;
 }
 
+static image<rgb> *changepipe(image<rgb> *src, int pipe)
+{
+    int width = src->width();
+    int height = src->height();
+    image<rgb> *dst = new image<rgb>(width, height); 
+    for (int y = 0; y < height; y++)
+    for (int x = 0; x < width; x++) 
+    {
+      rgb newcolor = imRef(src, x, y);
+      newcolor.r = ((int)((newcolor.r * 1.0 / 255) * (pipe - 1) )) * (256 / pipe);
+      newcolor.g = ((int)((newcolor.g * 1.0 / 255) * (pipe - 1) )) * (256 / pipe);
+      newcolor.b = ((int)((newcolor.b * 1.0 / 255) * (pipe - 1) )) * (256 / pipe);
+      imRef(dst, x, y) = newcolor;
+    }
+  return dst;
+}
+
 #endif
