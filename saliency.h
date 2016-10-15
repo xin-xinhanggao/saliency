@@ -23,7 +23,7 @@ static inline float diff(float r1, float g1, float b1, float r2, float g2, float
   return sqrt(square(r1 - r2) + square(g1 - g2) + square(b1 - b2));
 }
 
-image<rgb>* saliency(image<rgb>* im)
+image<rgb>* naive_saliency(image<rgb>* im)
 {
     int width = im->width();
     int height = im->height();
@@ -62,14 +62,6 @@ image<rgb>* saliency(image<rgb>* im)
     {
         int xfix = i / height;
         int yfix = i - xfix * height;
-        /*
-        for(int j = 0; j < total; j++)
-        {
-            int xcursor = j / height;
-            int ycursor = j - xcursor * height;
-            imRef(weight, xfix, yfix) += diff(r,g,b,xfix,yfix,xcursor,ycursor);
-        }   
-        */
         for(std::set<hiscolor>::iterator it = histogram.begin();it != histogram.end();it++)
         {
             imRef(weight, xfix, yfix) += it->get() * diff((float)it->getcolor().r, (float)it->getcolor().g, (float)it->getcolor().b, imRef(r,xfix,yfix), imRef(g,xfix,yfix), imRef(b,xfix,yfix));

@@ -3,6 +3,7 @@
 
 #include "misc.h"
 #include <set>
+#include <cstdio>
 
 class hiscolor
 {
@@ -14,6 +15,12 @@ class hiscolor
 		{
 			this->color = color;
 			this->frequency = frequency;
+		}
+
+		hiscolor()
+		{
+			this->frequency = 0;
+			color.r = color.g = color.b = 0;
 		}
 
 		rgb getcolor() const
@@ -50,7 +57,25 @@ inline bool operator<(const hiscolor &a, const hiscolor &b)
 		&& (a.color.g == b.color.g) && (a.color.b < b.color.b));
 }
 
-void get_histogram(std::set<hiscolor> &histogram, image<rgb>* im)
+class weightcolor
+{
+	public:
+		hiscolor color;
+
+		weightcolor(hiscolor color)
+		{
+			this->color = color;
+		}
+
+		friend inline bool operator<(const weightcolor &a, const weightcolor &b);
+};
+
+inline bool operator<(const weightcolor &a, const weightcolor &b)
+{
+	return (a.color.frequency < b.color.frequency) || (a.color < b.color);
+}
+
+void get_histogram(std::set<hiscolor> &histogram, image<rgb>* im , float scale = 0.95)
 {
     int width = im->width();
     int height = im->height();
@@ -70,6 +95,25 @@ void get_histogram(std::set<hiscolor> &histogram, image<rgb>* im)
         		histogram.insert(color);
         	}
     	}
+    std::set<weightcolor> sorthistogram;
+    for(std::set<hiscolor>::iterator it = histogram.begin(); it != histogram.end(); it++)
+    {
+    	sorthistogram.insert(weightcolor(*it));
+    }
+
+    int totalweight = width * height * (1 - scale);
+    int currentweight = 0;
+
+    for(std::set<weightcolor>::iterator it = sorthistogram.begin(); it != sorthistogram.end(); it++)
+    {
+    	currentweight += it->color.frequency;
+    	std::set<hiscolor>::iterator iter = histogram.find(it->color);
+    	histogram.erase(iter);
+    	if(currentweight > totalweight)
+    		break;
+    }
+
+    printf("color size: %d\n", histogram.size());
 }
 
 #endif
