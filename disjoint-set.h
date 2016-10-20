@@ -2,13 +2,14 @@
 #define DISJOINT_SET
 
 #include <set>
+#include <list>
 // disjoint-set forests using union-by-rank and path compression (sort of).
 
 typedef struct {
   int rank;
   int p;
   int size;
-  std::set<int> cset;
+  std::list<int> clist;
   float x;
   float y;
 } uni_elt;
@@ -22,6 +23,7 @@ public:
   int size(int x) const { return elts[x].size; }
   int num_sets() const { return num; }
   uni_elt* findelt(int x) {return &elts[find(x)]; }
+  uni_elt* getelt(int x) {return &elts[x]; }
   std::set<int> kset;
 
 private:
@@ -40,10 +42,8 @@ universe::universe(int elements, int width, int height) {
     elts[i].rank = 0;
     elts[i].size = 1;
     elts[i].p = i;
-    elts[i].cset.insert(i);
     elts[i].y = ((i / this->width) + 1) * 1.0 / this->height;
     elts[i].x = (i - (i / this->width) * this->width + 1) * 1.0 / this->width;
-    kset.insert(i);
   }
 }
   
@@ -68,19 +68,13 @@ void universe::join(int x, int y)
     elts[x].y = (elts[x].y * elts[x].size + elts[y].y * elts[y].size) / (elts[x].size + elts[y].size);
     elts[y].p = x;
     elts[x].size += elts[y].size;
-    elts[x].cset.insert(elts[y].cset.begin(), elts[y].cset.end());
-    elts[y].cset.clear();
-    kset.erase(y);
   } else { // merge x to y
     elts[y].x = (elts[x].x * elts[x].size + elts[y].x * elts[y].size) / (elts[x].size + elts[y].size);
     elts[y].y = (elts[x].y * elts[x].size + elts[y].y * elts[y].size) / (elts[x].size + elts[y].size);
     elts[x].p = y;
     elts[y].size += elts[x].size;
-    elts[y].cset.insert(elts[x].cset.begin(), elts[x].cset.end());
-    elts[x].cset.clear();
     if (elts[x].rank == elts[y].rank)
       elts[y].rank++;
-    kset.erase(x);
   }
   num--;
 }

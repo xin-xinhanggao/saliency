@@ -140,8 +140,11 @@ universe *segment_image(image<rgb> *im, float sigma, float c, int min_size)
   
   for (int y = 0; y < height; y++) {
     for (int x = 0; x < width; x++) {
-      int comp = u->find(y * width + x);
+      int picidx = y * width + x;
+      int comp = u->find(picidx);
       imRef(output, x, y) = colors[comp];
+      u->kset.insert(comp);
+      u->getelt(comp)->clist.push_back(picidx);
     }
   }  
 
