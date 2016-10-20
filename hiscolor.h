@@ -113,7 +113,46 @@ void get_histogram(std::set<hiscolor> &histogram, image<rgb>* im , float scale =
     		break;
     }
 
-    printf("color size: %d\n", histogram.size());
 }
 
+void get_histogram(std::set<hiscolor> &histogram, const std::set<int> cset, image<rgb>* im, float scale = 0.95)
+{
+	int width = im->width();
+    int height = im->height();
+
+    for(std::set<int>::iterator it = cset.begin(); it != cset.end();it++)
+    {
+    	int y = (*it) / width;
+    	int x = (*it) - y * width;
+    	hiscolor color(imRef(im, x, y));
+    	if(histogram.count(color) == 0)
+        	histogram.insert(color);
+        else
+        {
+        	std::set<hiscolor>::iterator it = histogram.find(color);
+        	int frequency = it->get() + 1;
+        	histogram.erase(it);
+        	color.set(frequency);
+        	histogram.insert(color);
+        }
+    }
+    
+    std::set<weightcolor> sorthistogram;
+    for(std::set<hiscolor>::iterator it = histogram.begin(); it != histogram.end(); it++)
+    {
+    	sorthistogram.insert(weightcolor(*it));
+    }
+
+    int totalweight = width * height * (1 - scale);
+    int currentweight = 0;
+
+    for(std::set<weightcolor>::iterator it = sorthistogram.begin(); it != sorthistogram.end(); it++)
+    {
+    	currentweight += it->color.frequency;
+    	std::set<hiscolor>::iterator iter = histogram.find(it->color);
+    	histogram.erase(iter);
+    	if(currentweight > totalweight)
+    		break;
+    }
+}
 #endif

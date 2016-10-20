@@ -57,8 +57,8 @@ static inline float diff(image<float> *r, image<float> *g, image<float> *b,
  * min_size: minimum component size (enforced by post-processing stage).
  * num_ccs: number of connected components in the segmentation.
  */
-image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
-			  int *num_ccs) {
+universe *segment_image(image<rgb> *im, float sigma, float c, int min_size) 
+{
   int width = im->width();
   int height = im->height();
 
@@ -130,7 +130,6 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
       u->join(a, b);
   }
   delete [] edges;
-  *num_ccs = u->num_sets();
 
   image<rgb> *output = new image<rgb>(width, height);
 
@@ -146,10 +145,10 @@ image<rgb> *segment_image(image<rgb> *im, float sigma, float c, int min_size,
     }
   }  
 
+  savePPM(output, "segment.ppm");
   delete [] colors;  
-  delete u;
 
-  return output;
+  return u;
 }
 
 #endif
