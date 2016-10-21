@@ -120,9 +120,11 @@ void get_histogram(std::set<hiscolor> &histogram, std::list<int> clist, image<rg
 {
 	int width = im->width();
     int height = im->height();
+    int size = 0;
 
     for(std::list<int>::iterator iter = clist.begin(); iter != clist.end();iter++)
     {
+        size++;
     	int y = (*iter) / width;
     	int x = (*iter) - y * width;
     	hiscolor color(imRef(im, x, y));
@@ -137,14 +139,14 @@ void get_histogram(std::set<hiscolor> &histogram, std::list<int> clist, image<rg
         	histogram.insert(color);
         }
     }
-    /*
+    
     std::set<weightcolor> sorthistogram;
     for(std::set<hiscolor>::iterator it = histogram.begin(); it != histogram.end(); it++)
     {
     	sorthistogram.insert(weightcolor(*it));
     }
 
-    int totalweight = width * height * (1 - scale);
+    int totalweight = size * (1 - scale);
     int currentweight = 0;
 
     for(std::set<weightcolor>::iterator it = sorthistogram.begin(); it != sorthistogram.end(); it++)
@@ -155,6 +157,6 @@ void get_histogram(std::set<hiscolor> &histogram, std::list<int> clist, image<rg
     	if(currentweight > totalweight)
     		break;
     }
-    */
+    
 }
 #endif
