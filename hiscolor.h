@@ -3,6 +3,7 @@
 
 #include "misc.h"
 #include <set>
+#include <list>
 #include <cstdio>
 
 class hiscolor
@@ -115,15 +116,15 @@ void get_histogram(std::set<hiscolor> &histogram, image<rgb>* im , float scale =
 
 }
 
-void get_histogram(std::set<hiscolor> &histogram, const std::set<int> cset, image<rgb>* im, float scale = 0.95)
+void get_histogram(std::set<hiscolor> &histogram, std::list<int> clist, image<rgb>* im, float scale = 0.95)
 {
 	int width = im->width();
     int height = im->height();
 
-    for(std::set<int>::iterator it = cset.begin(); it != cset.end();it++)
+    for(std::list<int>::iterator iter = clist.begin(); iter != clist.end();iter++)
     {
-    	int y = (*it) / width;
-    	int x = (*it) - y * width;
+    	int y = (*iter) / width;
+    	int x = (*iter) - y * width;
     	hiscolor color(imRef(im, x, y));
     	if(histogram.count(color) == 0)
         	histogram.insert(color);
@@ -136,7 +137,7 @@ void get_histogram(std::set<hiscolor> &histogram, const std::set<int> cset, imag
         	histogram.insert(color);
         }
     }
-    
+    /*
     std::set<weightcolor> sorthistogram;
     for(std::set<hiscolor>::iterator it = histogram.begin(); it != histogram.end(); it++)
     {
@@ -154,5 +155,6 @@ void get_histogram(std::set<hiscolor> &histogram, const std::set<int> cset, imag
     	if(currentweight > totalweight)
     		break;
     }
+    */
 }
 #endif

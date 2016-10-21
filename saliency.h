@@ -7,16 +7,10 @@
 #include "image.h"
 #include "misc.h"
 #include "hiscolor.h"
+#include "segment-image.h"
 #include "filter.h"
 
 
-// dissimilarity measure between pixels
-static inline float diff(image<float> *r, image<float> *g, image<float> *b, int x1, int y1, int x2, int y2) 
-{
-  return sqrt(square(imRef(r, x1, y1)-imRef(r, x2, y2)) +
-          square(imRef(g, x1, y1)-imRef(g, x2, y2)) +
-          square(imRef(b, x1, y1)-imRef(b, x2, y2)));
-}
 
 static inline float diff(float r1, float g1, float b1, float r2, float g2, float b2)
 {
@@ -58,6 +52,9 @@ image<rgb>* naive_saliency(image<rgb>* im)
     std::set<hiscolor> histogram;
     get_histogram(histogram, im);
 
+    printf("%d\n", total);
+    printf("%d\n", histogram.size());
+
     for(int i = 0;i < total; i++)
     {
         int xfix = i / height;
@@ -77,6 +74,63 @@ image<rgb>* naive_saliency(image<rgb>* im)
         imRef(output,x,y).r = (uchar)(int)(imRef(weight,x,y) / maximum * 255);
         imRef(output,x,y).g = (uchar)(int)(imRef(weight,x,y) / maximum * 255);
         imRef(output,x,y).b = (uchar)(int)(imRef(weight,x,y) / maximum * 255);
+    }
+
+    return output;
+}
+
+image<rgb>* gc_saliency(image<rgb>* im)
+{
+    universe* u = segment_image(im, 0.8, 440, 40);
+    printf("complete segment_image piece %d\n", u->num_sets());
+    int width = im->width();
+    int height = im->height();
+    int total = width * height;
+    float *weight = new float[total];
+    float maximum = 0.0;
+
+    for(std::set<int>::iterator iter1 = u->kset.begin() ;iter1 != u->kset.end(); iter1++)
+    {
+        float ddiff = 0;
+        std::set<hiscolor> histogram1;
+        uni_elt* elt1 = u->findelt(*iter1);
+        get_histogram(histogram1, elt1->clist, im);
+
+        for(std::set<int>::iterator iter2 = u->kset.begin() ;iter2 != u->kset.end(); iter2++)
+        {
+            if(*iter1 != *iter2)
+            {
+                uni_elt* elt2 = u->findelt(*iter2);
+                float distanceweight = 1.0;
+                //float distanceweight = exp(sqrt(square(elt1->x - elt2->x) + square(elt1->y - elt2->y)) / (-0.4)); 
+                std::set<hiscolor> histogram2;
+                get_histogram(histogram2, elt2->clist, im);
+                //printf("h1 %d h2 %d\n", histogram1.size(), histogram2.size());
+                for(std::set<hiscolor>::iterator c1 = histogram1.begin();c1 != histogram1.end(); c1++)
+                    for(std::set<hiscolor>::iterator c2 = histogram2.begin();c2 != histogram2.end(); c2++)
+                    {
+                        float cdiff = diff((float)c1->getcolor().r, (float)c1->getcolor().g, (float)c1->getcolor().b, (float)c2->getcolor().r, (float)c2->getcolor().g, (float)c2->getcolor().b);
+                        //printf("%f\n", cdiff);
+                        ddiff += elt2->size * distanceweight * c1->get() * c2->get() * cdiff;
+                    }
+            }
+        }
+        //printf("%f\n", ddiff);
+        //ddiff = ddiff * exp(-9 * (square(elt1->x - 0.5) + square(elt1->y - 0.5)));
+        weight[*iter1] = ddiff;
+        if(ddiff > maximum)
+            maximum = ddiff;
+    }
+
+    image<rgb> *output = new image<rgb>(width, height);
+    for(int y = 0; y < height; y++)
+    for(int x = 0; x < width; x++)
+    {
+        int picidx = y * width + x;
+        int comp = u->find(picidx);
+        imRef(output,x,y).r = (uchar)(int)(weight[comp] / maximum * 255);
+        imRef(output,x,y).g = (uchar)(int)(weight[comp] / maximum * 255);
+        imRef(output,x,y).b = (uchar)(int)(weight[comp] / maximum * 255);
     }
 
     return output;

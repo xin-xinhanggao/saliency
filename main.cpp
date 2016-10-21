@@ -13,7 +13,7 @@ int main(int argc, char **argv) {
 
   image<rgb> *modify = changepipe(input,12);
 
-  image<rgb> *output = naive_saliency(modify);
+  image<rgb> *output = gc_saliency(modify);
 
   savePPM(output, argv[2]);
   printf("done! uff...thats hard work.\n");
