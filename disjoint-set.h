@@ -3,6 +3,7 @@
 
 #include <set>
 #include <list>
+#include "misc.h"
 // disjoint-set forests using union-by-rank and path compression (sort of).
 
 typedef struct {
@@ -11,6 +12,7 @@ typedef struct {
   int size;
   std::list<int> clist;
   float x;
+  float d;
   float y;
 } uni_elt;
 
@@ -44,6 +46,7 @@ universe::universe(int elements, int width, int height) {
     elts[i].p = i;
     elts[i].y = ((i / this->width) + 1) * 1.0 / this->height;
     elts[i].x = (i - (i / this->width) * this->width + 1) * 1.0 / this->width;
+    elts[i].d = sqrt(square(elts[i].x - 0.5) + square(elts[i].y - 0.5));
   }
 }
   
@@ -66,11 +69,13 @@ void universe::join(int x, int y)
   if (elts[x].rank > elts[y].rank) { //merge y to x
     elts[x].x = (elts[x].x * elts[x].size + elts[y].x * elts[y].size) / (elts[x].size + elts[y].size);
     elts[x].y = (elts[x].y * elts[x].size + elts[y].y * elts[y].size) / (elts[x].size + elts[y].size);
+    elts[x].d = (elts[x].d * elts[x].size + elts[y].d * elts[y].size) / (elts[x].size + elts[y].size);
     elts[y].p = x;
     elts[x].size += elts[y].size;
   } else { // merge x to y
     elts[y].x = (elts[x].x * elts[x].size + elts[y].x * elts[y].size) / (elts[x].size + elts[y].size);
     elts[y].y = (elts[x].y * elts[x].size + elts[y].y * elts[y].size) / (elts[x].size + elts[y].size);
+    elts[y].d = (elts[x].d * elts[x].size + elts[y].d * elts[y].size) / (elts[x].size + elts[y].size);
     elts[x].p = y;
     elts[y].size += elts[x].size;
     if (elts[x].rank == elts[y].rank)

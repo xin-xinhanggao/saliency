@@ -81,7 +81,7 @@ image<rgb>* naive_saliency(image<rgb>* im)
 
 image<rgb>* gc_saliency(image<rgb>* im)
 {
-    universe* u = segment_image(im, 0.8, 440, 40);
+    universe* u = segment_image(im, 0.8, 670, 20);
     printf("complete segment_image piece %d\n", u->num_sets());
     int width = im->width();
     int height = im->height();
@@ -135,8 +135,9 @@ image<rgb>* gc_saliency(image<rgb>* im)
         {
             if(i != j)
                 weight[focus] += Ds[i][j] * Dr[i][j] * elt[j]->size;
+                //weight[focus] +=  Dr[i][j] * elt[j]->size;
         }
-        weight[focus] *= exp(-9 * (square(elt[i]->x - 0.5) + square(elt[i]->y - 0.5)));
+        weight[focus] *= exp(-9 * (square(elt[i]->d)));
 
         if(weight[focus] > maximum)
             maximum = weight[focus];
