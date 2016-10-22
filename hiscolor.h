@@ -157,6 +157,6 @@ void get_histogram(std::set<hiscolor> &histogram, std::list<int> clist, image<rg
     	if(currentweight > totalweight)
     		break;
     }
-    
+
 }
 #endif

@@ -89,37 +89,57 @@ image<rgb>* gc_saliency(image<rgb>* im)
     float *weight = new float[total];
     float maximum = 0.0;
 
-    for(std::set<int>::iterator iter1 = u->kset.begin() ;iter1 != u->kset.end(); iter1++)
-    {
-        float ddiff = 0;
-        std::set<hiscolor> histogram1;
-        uni_elt* elt1 = u->findelt(*iter1);
-        get_histogram(histogram1, elt1->clist, im);
+    std::set<hiscolor> *histogram = new std::set<hiscolor> [u->num_sets()];
+    uni_elt *elt[u->num_sets()];
 
-        for(std::set<int>::iterator iter2 = u->kset.begin() ;iter2 != u->kset.end(); iter2++)
+    int iternum = 0;
+    for(std::set<int>::iterator iter = u->kset.begin();iter != u->kset.end(); iter++)
+    {
+        elt[iternum] = u->findelt(*iter);
+        get_histogram(histogram[iternum], elt[iternum]->clist, im);
+        iternum++;
+    }
+
+    float **Dr = new float*[iternum];
+    float **Ds = new float*[iternum];
+    for(int i = 0; i < iternum;i++)
+    {
+        Dr[i] = new float[iternum];
+        Ds[i] = new float[iternum];
+    }
+
+    for(int i = 0; i < iternum;i++)
+    {
+        for(int j = i + 1;j < iternum;j++)
         {
-            if(*iter1 != *iter2)
-            {
-                uni_elt* elt2 = u->findelt(*iter2);
-                float distanceweight = 1.0;
-                //float distanceweight = exp(sqrt(square(elt1->x - elt2->x) + square(elt1->y - elt2->y)) / (-0.4)); 
-                std::set<hiscolor> histogram2;
-                get_histogram(histogram2, elt2->clist, im);
-                //printf("h1 %d h2 %d\n", histogram1.size(), histogram2.size());
-                for(std::set<hiscolor>::iterator c1 = histogram1.begin();c1 != histogram1.end(); c1++)
-                    for(std::set<hiscolor>::iterator c2 = histogram2.begin();c2 != histogram2.end(); c2++)
-                    {
-                        float cdiff = diff((float)c1->getcolor().r, (float)c1->getcolor().g, (float)c1->getcolor().b, (float)c2->getcolor().r, (float)c2->getcolor().g, (float)c2->getcolor().b);
-                        //printf("%f\n", cdiff);
-                        ddiff += elt2->size * distanceweight * c1->get() * c2->get() * cdiff;
-                    }
-            }
+            Ds[i][j] = exp(sqrt(square(elt[i]->x - elt[j]->x) + square(elt[i]->y - elt[j]->y)) / (-0.4));
+            Dr[i][j] = 0.0;
+            for(std::set<hiscolor>::iterator c1 = histogram[i].begin();c1 != histogram[i].end(); c1++)
+                for(std::set<hiscolor>::iterator c2 = histogram[j].begin();c2 != histogram[j].end(); c2++)
+                {    
+                    rgb color1 = c1->getcolor();
+                    rgb color2 = c2->getcolor();
+                    float cdiff = diff((float)color1.r, (float)color1.g, (float)color1.b, (float)color2.r, (float)color2.g, (float)color2.b);
+                    Dr[i][j] += c1->get() * c2->get() * cdiff;  
+                }
+            Ds[j][i] = Ds[i][j];
+            Dr[j][i] = Dr[i][j];
         }
-        //printf("%f\n", ddiff);
-        //ddiff = ddiff * exp(-9 * (square(elt1->x - 0.5) + square(elt1->y - 0.5)));
-        weight[*iter1] = ddiff;
-        if(ddiff > maximum)
-            maximum = ddiff;
+    }
+    
+    for(int i = 0;i < iternum;i++)
+    {
+        int focus = elt[i]->p;
+        weight[focus] = 0;
+        for(int j = 0;j < iternum;j++)
+        {
+            if(i != j)
+                weight[focus] += Ds[i][j] * Dr[i][j] * elt[j]->size;
+        }
+        weight[focus] *= exp(-9 * (square(elt[i]->x - 0.5) + square(elt[i]->y - 0.5)));
+
+        if(weight[focus] > maximum)
+            maximum = weight[focus];
     }
 
     image<rgb> *output = new image<rgb>(width, height);
